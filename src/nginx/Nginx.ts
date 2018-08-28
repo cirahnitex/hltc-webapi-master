@@ -79,6 +79,7 @@ export async function startOrRestartNginx(nginxBinPath:string, nginxConfigDir:st
         }
     }
     if(pid == null) {
+        await fs.ensureDir(`${nginxConfigDir}/tmp`);
         printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir,"cluster_nginx.conf")}`);
         await spawn(`${nginxBinPath}`,["-c",Path.join(nginxConfigDir,"cluster_nginx.conf")],{detached:true});
     }
