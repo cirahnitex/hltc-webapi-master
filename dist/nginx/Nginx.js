@@ -78,6 +78,17 @@ function writeGuiRoot(nginxConfigDir) {
         yield fs.outputFile(`${nginxConfigDir}/GENERATED_gui_root.conf`, content);
     });
 }
+function ensureTmpDirs(nginxConfigDir) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield Promise.all([
+            fs.ensureDir(`${nginxConfigDir}/tmp/client_body`),
+            fs.ensureDir(`${nginxConfigDir}/tmp/fastcgi_temp`),
+            fs.ensureDir(`${nginxConfigDir}/tmp/proxy_temp`),
+            fs.ensureDir(`${nginxConfigDir}/tmp/scgi_temp`),
+            fs.ensureDir(`${nginxConfigDir}/tmp/uwsgi_temp`),
+        ]);
+    });
+}
 function startOrRestartNginx(nginxBinPath, nginxConfigDir) {
     return __awaiter(this, void 0, void 0, function* () {
         yield Promise.all([
@@ -93,6 +104,7 @@ function startOrRestartNginx(nginxBinPath, nginxConfigDir) {
             }
         }
         if (pid == null) {
+            yield fs.ensureDir(nginxConfigDir);
             consoleStyles_1.printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir, "cluster_nginx.conf")}`);
             yield ts_process_promises_1.spawn(`${nginxBinPath}`, ["-c", Path.join(nginxConfigDir, "cluster_nginx.conf")], { detached: true });
         }
