@@ -1,0 +1,37 @@
+{
+  "name": "hltc-webapi-master",
+  "version": "1.0.0",
+  "description": "Command-line interface to manage WebAPIs",
+  "scripts": {
+    "build": "tsc"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cirahnitex/hltc-webapi-master.git"
+  },
+  "author": "YAN Yuchen <cirahnitex@gmail.com>",
+  "bin": {
+    "webapi-start": "bin/start",
+    "webapi-install": "bin/install",
+    "webapi-list": "bin/list",
+    "webapi-stop": "bin/stop",
+    "webapi-reload-nginx": "bin/reload-nginx"
+  },
+  "dependencies": {
+    "chalk": "^2.3.0",
+    "fs-extra": "^5.0.0",
+    "child-process-promise": "^2.2.1",
+    "ts-process-promises": "^1.0.2",
+    "cli-table2": "^0.2.0",
+    "commander": "^2.13.0",
+    "ps-list": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "5.0.0",
+    "@types/bluebird": "^3.5.20",
+    "@types/cli-table2": "^0.2.1",
+    "typescript": "^2.6.2"
+  },
+  "homepage": "https://github.com/cirahnitex/hltc-webapi-master"
+}

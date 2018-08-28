@@ -1,0 +1,7 @@
+package-lock.json
+node_modules/
+.idea/
+nginx_conf/tmp/
+nginx_conf/GENERATED_*
+nginx_conf/*.log
+nginx_conf/*.pid
