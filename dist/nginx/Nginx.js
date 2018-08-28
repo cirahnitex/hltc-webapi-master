@@ -14,6 +14,7 @@ const listPs = require("ps-list");
 const ts_process_promises_1 = require("ts-process-promises");
 const Path = require("path");
 const paths_1 = require("../paths");
+const consoleStyles_1 = require("../util/consoleStyles");
 function generateFastCgiPass(aJob) {
     let ret = "";
     for (let i = 0; i < aJob.length; i++) {
@@ -92,6 +93,7 @@ function startOrRestartNginx(nginxBinPath, nginxConfigDir) {
             }
         }
         if (pid == null) {
+            consoleStyles_1.printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir, "cluster_nginx.conf")}`);
             yield ts_process_promises_1.spawn(`${nginxBinPath}`, ["-c", Path.join(nginxConfigDir, "cluster_nginx.conf")], { detached: true });
         }
         else {

@@ -4,6 +4,7 @@ import * as listPs from "ps-list";
 import {spawn, exec} from "ts-process-promises";
 import * as Path from "path";
 import {NGINX_CONF_HOME, WEBAPI_CLIENT_HTDOCS_DIR} from "../paths";
+import {printInfo} from "../util/consoleStyles";
 
 function generateFastCgiPass(aJob:Job[]):string {
     let ret = "";
@@ -78,6 +79,7 @@ export async function startOrRestartNginx(nginxBinPath:string, nginxConfigDir:st
         }
     }
     if(pid == null) {
+        printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir,"cluster_nginx.conf")}`);
         await spawn(`${nginxBinPath}`,["-c",Path.join(nginxConfigDir,"cluster_nginx.conf")],{detached:true});
     }
     else {
