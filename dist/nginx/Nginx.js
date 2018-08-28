@@ -104,7 +104,7 @@ function startOrRestartNginx(nginxBinPath, nginxConfigDir) {
             }
         }
         if (pid == null) {
-            yield fs.ensureDir(nginxConfigDir);
+            yield ensureTmpDirs(nginxConfigDir);
             consoleStyles_1.printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir, "cluster_nginx.conf")}`);
             yield ts_process_promises_1.spawn(`${nginxBinPath}`, ["-c", Path.join(nginxConfigDir, "cluster_nginx.conf")], { detached: true });
         }
