@@ -65,6 +65,16 @@ async function writeGuiRoot(nginxConfigDir:string) {
     await fs.outputFile(`${nginxConfigDir}/GENERATED_gui_root.conf`,content);
 }
 
+async function ensureTmpDirs(nginxConfigDir:string) {
+    await Promise.all([
+        fs.ensureDir(`${nginxConfigDir}/tmp/client_body`),
+        fs.ensureDir(`${nginxConfigDir}/tmp/fastcgi_temp`),
+        fs.ensureDir(`${nginxConfigDir}/tmp/proxy_temp`),
+        fs.ensureDir(`${nginxConfigDir}/tmp/scgi_temp`),
+        fs.ensureDir(`${nginxConfigDir}/tmp/uwsgi_temp`),
+    ]);
+}
+
 export async function startOrRestartNginx(nginxBinPath:string, nginxConfigDir:string) {
     await Promise.all([
         await writeLogConfig(nginxConfigDir),
@@ -79,7 +89,7 @@ export async function startOrRestartNginx(nginxBinPath:string, nginxConfigDir:st
         }
     }
     if(pid == null) {
-        await fs.ensureDir(`${nginxConfigDir}/tmp`);
+        await fs.ensureDir(nginxConfigDir);
         printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir,"cluster_nginx.conf")}`);
         await spawn(`${nginxBinPath}`,["-c",Path.join(nginxConfigDir,"cluster_nginx.conf")],{detached:true});
     }
