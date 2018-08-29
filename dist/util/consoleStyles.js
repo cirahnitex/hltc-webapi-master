@@ -5,6 +5,10 @@ function printInfo(str) {
     console.log(`${chalk_1.default.bgCyan.black("INFO")} ${str}`);
 }
 exports.printInfo = printInfo;
+function printWarning(str) {
+    console.log(`${chalk_1.default.bgYellow.black("WARN")} ${str}`);
+}
+exports.printWarning = printWarning;
 function printError(str) {
     console.log(`${chalk_1.default.bgRed.black("ERR!")} ${str}`);
 }

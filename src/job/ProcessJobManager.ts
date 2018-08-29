@@ -48,11 +48,11 @@ export async function findOneJob(filter:Partial<Job>):Promise<Job|null> {
 }
 
 function stringSimilarity(str1:string, str2:string):number {
-    for(let i=0; i<str1.length; i++) {
+    let i=0;
+    for(i=0; i<str1.length; i++) {
         if(i<str2.length && str2[i]===str1[i]) continue;
-        return i;
     }
-    return 0;
+    return i;
 }
 
 async function findCloestPlatformType(entryScriptDir:string, realPlatformType:string):Promise<string> {

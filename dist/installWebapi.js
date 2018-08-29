@@ -114,7 +114,9 @@ function writeFcgiEntryScript(wd, queue, platformType) {
 #$ -S /bin/bash
 #$ -V
 #$ -q ${queue}
-PLATFORM_TYPE=\`make -f $CL/dev/Makefile echo-PLATFORM_TYPE\`
+if [ -z "$PLATFORM_TYPE" ]; then
+	PLATFORM_TYPE=\`make -f $CL/dev/Makefile echo-PLATFORM_TYPE\`
+fi
 LD_LIBRARY_PATH=$LD_LIBRATY_PATH:${paths_1.FCGI_LIB_PATH('$PLATFORM_TYPE', '$CL')}
 ${paths_1.SPAWN_FCGI_BIN("$PLATFORM_TYPE", '$CL')} -n $PLATFORM_TYPE/main -p $PORT
 `;

@@ -17,6 +17,7 @@ const delay_1 = require("../delay");
 const paths_1 = require("../paths");
 const Path = require("path");
 const fs = require("fs-extra");
+const MakeVariable = require("../MakeVariables");
 const PROCESS_PAYLOAD_BOUNDARY = 'c4yP';
 function listJobs() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -60,6 +61,38 @@ function findOneJob(filter) {
     });
 }
 exports.findOneJob = findOneJob;
+function stringSimilarity(str1, str2) {
+    let i = 0;
+    for (i = 0; i < str1.length; i++) {
+        if (i < str2.length && str2[i] === str1[i])
+            continue;
+    }
+    return i;
+}
+function findCloestPlatformType(entryScriptDir, realPlatformType) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const files = yield fs.readdir(entryScriptDir);
+        let maxSimilarity = 0;
+        let bestPlatform = null;
+        for (const iPlatform of files) {
+            const stat = yield fs.stat(Path.join(entryScriptDir, iPlatform));
+            if (!stat.isDirectory())
+                continue;
+            const sim = stringSimilarity(realPlatformType, iPlatform);
+            if (sim > maxSimilarity) {
+                maxSimilarity = sim;
+                bestPlatform = iPlatform;
+            }
+        }
+        if (bestPlatform == null) {
+            throw new Error(`no installed WebAPI`);
+        }
+        if (bestPlatform !== realPlatformType) {
+            consoleStyles_1.printWarning(`no installed WebAPI for platform ${realPlatformType}, using nearest match ${bestPlatform} instead.`);
+        }
+        return bestPlatform;
+    });
+}
 function startJob(webapiName) {
     return __awaiter(this, void 0, void 0, function* () {
         // get the entry script and protocol
@@ -75,8 +108,9 @@ function startJob(webapiName) {
         const stderrFile = yield fs.open(`${entryScriptDir}/${paths_1.WEBAPI_STDERR_LOG}`, 'w');
         const stdoutFile = yield fs.open(`${entryScriptDir}/${paths_1.WEBAPI_STDOUT_LOG}`, 'w');
         const jobName = Job_1.default.serializeName(webapiName, port, protocol);
+        const cloestPlatformType = yield findCloestPlatformType(entryScriptDir, yield MakeVariable.getOne(paths_1.DEV, "PLATFORM_TYPE"));
         consoleStyles_1.printInfo(`runnung ${entryScript} ${PROCESS_PAYLOAD_BOUNDARY + jobName + PROCESS_PAYLOAD_BOUNDARY}`);
-        const subProcess = child_process_1.spawn(`${entryScript}`, [PROCESS_PAYLOAD_BOUNDARY + jobName + PROCESS_PAYLOAD_BOUNDARY], { env: Object.assign({}, process.env, { PORT: port }), cwd: entryScriptDir, detached: true, stdio: ['ignore', stdoutFile, stderrFile] });
+        const subProcess = child_process_1.spawn(`${entryScript}`, [PROCESS_PAYLOAD_BOUNDARY + jobName + PROCESS_PAYLOAD_BOUNDARY], { env: Object.assign({}, process.env, { PORT: port, PLATFORM_TYPE: cloestPlatformType }), cwd: entryScriptDir, detached: true, stdio: ['ignore', stdoutFile, stderrFile] });
         subProcess.unref();
         // busy wait for the webapi to start
         let job;
