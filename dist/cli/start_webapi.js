@@ -14,9 +14,8 @@ const program = require("commander");
 const consoleStyles_1 = require("../util/consoleStyles");
 const listWebapis_1 = require("../listWebapis");
 program
-    .version("0.1.0")
     .description("start a WebAPI by name")
-    .command(`<webapi-name>`)
+    .arguments('<webapi-name>')
     .parse(process.argv);
 if (process.argv.length !== 3)
     program.help();

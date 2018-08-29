@@ -15,9 +15,8 @@ const ts_process_promises_1 = require("ts-process-promises");
 const consoleStyles_1 = require("../util/consoleStyles");
 const SGEQueue_1 = require("../job/SGEQueue");
 program
-    .version("0.1.0")
-    .description("start a WebAPI by name")
-    .command(`<webapi-name>`)
+    .description("stop a WebAPI by name")
+    .arguments('<webapi-name>')
     .parse(process.argv);
 if (process.argv.length !== 3)
     program.help();

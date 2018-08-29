@@ -6,6 +6,12 @@ import * as Nginx from "../nginx/Nginx";
 import * as SGEJobManager from "../job/SGEJobManager";
 import {getMany as makeGetVariables} from "../MakeVariables";
 import {ensureNotOnComputationNode} from "../job/SGEQueue";
+
+import * as program from "commander";
+program
+    .description("start/restart NGINX")
+    .parse(process.argv);
+
 (async ()=>{
 
     // use corresponding job manager depending on hltc00 or other local machines

@@ -6,11 +6,9 @@ import {printError, printInfo} from "../util/consoleStyles";
 import {ensureNotOnComputationNode} from "../job/SGEQueue";
 
 program
-    .version("0.1.0")
-    .description("start a WebAPI by name")
-    .command(`<webapi-name>`)
+    .description("stop a WebAPI by name")
+    .arguments('<webapi-name>')
     .parse(process.argv);
-
 
 if(process.argv.length !== 3) program.help();
 const webapiName = process.argv[2];
