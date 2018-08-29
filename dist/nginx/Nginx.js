@@ -70,6 +70,8 @@ function writeLogConfig(nginxConfigDir) {
     return __awaiter(this, void 0, void 0, function* () {
         yield Promise.all([fs.outputFile(`${nginxConfigDir}/GENERATED_log_paths.conf`, generateLogPaths(nginxConfigDir)),
             fs.outputFile(`${nginxConfigDir}/GENERATED_temp_paths.conf`, generateTempPaths(nginxConfigDir))]);
+        const accessLogContent = `access_log                           ${nginxConfigDir}/cluster_access.log;`;
+        yield fs.outputFile(`${nginxConfigDir}/GENERATED_access_log_path.conf`, accessLogContent);
     });
 }
 function writeGuiRoot(nginxConfigDir) {

@@ -58,6 +58,8 @@ export async function writeProxyConfigFromJobs(nginxConfigDir:string, jobs:Job[]
 async function writeLogConfig(nginxConfigDir:string) {
     await Promise.all([fs.outputFile(`${nginxConfigDir}/GENERATED_log_paths.conf`,generateLogPaths(nginxConfigDir)),
         fs.outputFile(`${nginxConfigDir}/GENERATED_temp_paths.conf`,generateTempPaths(nginxConfigDir))]);
+    const accessLogContent = `access_log                           ${nginxConfigDir}/cluster_access.log;`;
+    await fs.outputFile(`${nginxConfigDir}/GENERATED_access_log_path.conf`, accessLogContent);
 }
 
 async function writeGuiRoot(nginxConfigDir:string) {
