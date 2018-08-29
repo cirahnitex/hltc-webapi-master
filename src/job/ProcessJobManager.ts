@@ -1,13 +1,14 @@
 import Job, {clearLog, generatePortNumber, getEntryScript} from "./Job";
-import {printInfo} from "../util/consoleStyles";
+import {printInfo, printWarning} from "../util/consoleStyles";
 import chalk from "chalk";
 import QStatusParser from "./QStatusParser";
 import {spawn} from "child_process";
 import * as psList from "ps-list";
 import delay from "../delay";
-import {WEBAPI_STDOUT_LOG, WEBAPI_STDERR_LOG} from "../paths";
+import {WEBAPI_STDOUT_LOG, WEBAPI_STDERR_LOG, DEV} from "../paths";
 import * as Path from "path";
 import * as fs from "fs-extra"
+import * as MakeVariable from "../MakeVariables";
 
 const PROCESS_PAYLOAD_BOUNDARY = 'c4yP';
 
@@ -46,6 +47,36 @@ export async function findOneJob(filter:Partial<Job>):Promise<Job|null> {
     return null;
 }
 
+function stringSimilarity(str1:string, str2:string):number {
+    for(let i=0; i<str1.length; i++) {
+        if(i<str2.length && str2[i]===str1[i]) continue;
+        return i;
+    }
+    return 0;
+}
+
+async function findCloestPlatformType(entryScriptDir:string, realPlatformType:string):Promise<string> {
+    const files = await fs.readdir(entryScriptDir);
+    let maxSimilarity:number = 0;
+    let bestPlatform:string|null = null;
+    for(const iPlatform of files) {
+        const stat = await fs.stat(Path.join(entryScriptDir, iPlatform));
+        if(!stat.isDirectory()) continue;
+        const sim = stringSimilarity(realPlatformType, iPlatform);
+        if(sim > maxSimilarity) {
+            maxSimilarity = sim;
+            bestPlatform = iPlatform;
+        }
+    }
+    if(bestPlatform == null) {
+        throw new Error(`no installed WebAPI`);
+    }
+    if(bestPlatform !== realPlatformType) {
+        printWarning(`no installed WebAPI for platform ${realPlatformType}, using nearest match ${bestPlatform} instead.`);
+    }
+    return bestPlatform;
+}
+
 export async function startJob(webapiName:string):Promise<Job> {
 
     // get the entry script and protocol
@@ -65,9 +96,9 @@ export async function startJob(webapiName:string):Promise<Job> {
     const stdoutFile = await fs.open(`${entryScriptDir}/${WEBAPI_STDOUT_LOG}`,'w');
 
     const jobName = Job.serializeName(webapiName, port, protocol);
-
+    const cloestPlatformType = await findCloestPlatformType(entryScriptDir, await MakeVariable.getOne(DEV, "PLATFORM_TYPE"));
     printInfo(`runnung ${entryScript} ${PROCESS_PAYLOAD_BOUNDARY + jobName + PROCESS_PAYLOAD_BOUNDARY}`);
-    const subProcess = spawn(`${entryScript}`,[PROCESS_PAYLOAD_BOUNDARY + jobName + PROCESS_PAYLOAD_BOUNDARY], {env:{...process.env, PORT:port},cwd:entryScriptDir,detached:true,stdio:[ 'ignore', stdoutFile, stderrFile ]});
+    const subProcess = spawn(`${entryScript}`,[PROCESS_PAYLOAD_BOUNDARY + jobName + PROCESS_PAYLOAD_BOUNDARY], {env:{...process.env, PORT:port, PLATFORM_TYPE:cloestPlatformType},cwd:entryScriptDir,detached:true,stdio:[ 'ignore', stdoutFile, stderrFile ]});
     subProcess.unref();
     // busy wait for the webapi to start
     let job:Job|null;
