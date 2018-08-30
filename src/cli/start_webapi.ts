@@ -25,5 +25,10 @@ const webapiName = process.argv[2];
         printError(`the WebAPI ${chalk.cyan(webapiName)} is not installed`);
         process.exit(-1);
     }
-    await startWebapi(webapiName);
+    try {
+        await startWebapi(webapiName);
+    }
+    catch(e) {
+        printError(e.message);
+    }
 })();

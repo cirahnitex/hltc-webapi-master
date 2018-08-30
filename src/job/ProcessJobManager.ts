@@ -82,7 +82,7 @@ export async function startJob(webapiName:string):Promise<Job> {
     // get the entry script and protocol
     const entryScriptMeta = await getEntryScript(webapiName);
     if(!entryScriptMeta) {
-        throw new Error("ENTRY_SCRIPT_NOT_FOUND");
+        throw new Error("entry script not found");
     }
     const entryScript = entryScriptMeta.path;
     const protocol = entryScriptMeta.protocol;
@@ -105,8 +105,13 @@ export async function startJob(webapiName:string):Promise<Job> {
     await delay(2000);
     job = await findOneJob({webapiName:webapiName,isRunning:true});
     if(!job) {
-        const errLogContent = await fs.readFile(`${entryScriptDir}/${WEBAPI_STDERR_LOG}`,'utf8');
-        throw new Error("failed to start job");
+        const errLogContent = await fs.readFile(`${entryScriptDir}/${WEBAPI_STDERR_LOG}`,'utf8').catch(e=>"");
+        if(errLogContent.trim.length<=0) {
+            throw new Error("job error: (empty error log)");
+        }
+        else {
+            throw new Error("job error: " + errLogContent);
+        }
     }
     return job;
 }
