@@ -11,6 +11,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const listWebapis_1 = require("../listWebapis");
 const chalk_1 = require("chalk");
 const consoleTable_1 = require("../util/consoleTable");
+const program = require("commander");
+program
+    .description("list all running and stopped WebAPIs")
+    .parse(process.argv);
 (() => __awaiter(this, void 0, void 0, function* () {
     const list = yield listWebapis_1.default();
     console.log(chalk_1.default.gray("Active WebAPIs"));

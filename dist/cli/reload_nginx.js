@@ -15,6 +15,10 @@ const Nginx = require("../nginx/Nginx");
 const SGEJobManager = require("../job/SGEJobManager");
 const MakeVariables_1 = require("../MakeVariables");
 const SGEQueue_1 = require("../job/SGEQueue");
+const program = require("commander");
+program
+    .description("start/restart NGINX")
+    .parse(process.argv);
 (() => __awaiter(this, void 0, void 0, function* () {
     // use corresponding job manager depending on hltc00 or other local machines
     let JobManager = SGEJobManager;
