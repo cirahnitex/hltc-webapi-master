@@ -32,6 +32,11 @@ const webapiName = process.argv[2];
         consoleStyles_1.printError(`the WebAPI ${chalk_1.default.cyan(webapiName)} is not installed`);
         process.exit(-1);
     }
-    yield startWebapi_1.default(webapiName);
+    try {
+        yield startWebapi_1.default(webapiName);
+    }
+    catch (e) {
+        consoleStyles_1.printError(e.message);
+    }
 }))();
 //# sourceMappingURL=start_webapi.js.map

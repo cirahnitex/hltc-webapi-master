@@ -98,7 +98,7 @@ function startJob(webapiName) {
         // get the entry script and protocol
         const entryScriptMeta = yield Job_1.getEntryScript(webapiName);
         if (!entryScriptMeta) {
-            throw new Error("ENTRY_SCRIPT_NOT_FOUND");
+            throw new Error("entry script not found");
         }
         const entryScript = entryScriptMeta.path;
         const protocol = entryScriptMeta.protocol;
@@ -115,12 +115,15 @@ function startJob(webapiName) {
         // busy wait for the webapi to start
         let job;
         yield delay_1.default(2000);
-        for (let i = 0; !(job = yield findOneJob({ webapiName: webapiName, isRunning: true })); i++) {
-            if (i >= 30) {
-                throw new Error("EXEC_TIMEOUT");
+        job = yield findOneJob({ webapiName: webapiName, isRunning: true });
+        if (!job) {
+            const errLogContent = yield fs.readFile(`${entryScriptDir}/${paths_1.WEBAPI_STDERR_LOG}`, 'utf8').catch(e => "");
+            if (errLogContent.trim.length <= 0) {
+                throw new Error("job error: (empty error log)");
             }
-            consoleStyles_1.printInfo(`waiting for the job ${chalk_1.default.cyan(webapiName)} to be running`);
-            yield delay_1.default(2000);
+            else {
+                throw new Error("job error: " + errLogContent);
+            }
         }
         return job;
     });
