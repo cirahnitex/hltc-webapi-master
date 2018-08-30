@@ -97,22 +97,19 @@ function startOrRestartNginx(nginxBinPath, nginxConfigDir) {
             yield writeLogConfig(nginxConfigDir),
             writeGuiRoot(nginxConfigDir)
         ]);
-        const psList = yield listPs();
-        let pid = null;
-        for (const { pid: iPid, name, cmd } of psList) {
-            if (cmd.indexOf("nginx: master process") >= 0) {
-                pid = iPid;
-                break;
+        const loggedPid = yield fs.readFile(`${nginxConfigDir}/cluster_nginx.pid`, 'utf8').then(str => parseInt(str.trim())).catch(e => null);
+        if (loggedPid) {
+            const psList = yield listPs();
+            for (const { pid } of psList) {
+                if (loggedPid === pid) {
+                    process.kill(pid, 'SIGHUP');
+                    return;
+                }
             }
         }
-        if (pid == null) {
-            yield ensureTmpDirs(nginxConfigDir);
-            consoleStyles_1.printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir, "cluster_nginx.conf")}`);
-            yield ts_process_promises_1.spawn(`${nginxBinPath}`, ["-c", Path.join(nginxConfigDir, "cluster_nginx.conf")], { detached: true });
-        }
-        else {
-            process.kill(pid, 'SIGHUP');
-        }
+        yield ensureTmpDirs(nginxConfigDir);
+        consoleStyles_1.printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir, "cluster_nginx.conf")}`);
+        yield ts_process_promises_1.spawn(`${nginxBinPath}`, ["-c", Path.join(nginxConfigDir, "cluster_nginx.conf")], { detached: true });
     });
 }
 exports.startOrRestartNginx = startOrRestartNginx;

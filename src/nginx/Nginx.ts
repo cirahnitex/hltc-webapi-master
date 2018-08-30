@@ -82,22 +82,20 @@ export async function startOrRestartNginx(nginxBinPath:string, nginxConfigDir:st
         await writeLogConfig(nginxConfigDir),
         writeGuiRoot(nginxConfigDir)
     ]);
-    const psList = await listPs();
-    let pid:number|null = null;
-    for(const {pid: iPid, name, cmd} of psList) {
-        if(cmd.indexOf("nginx: master process")>=0) {
-            pid = iPid;
-            break;
+
+    const loggedPid:number|null = await fs.readFile(`${nginxConfigDir}/cluster_nginx.pid`,'utf8').then(str=>parseInt(str.trim())).catch(e=>null);
+    if(loggedPid) {
+        const psList = await listPs();
+        for(const {pid} of psList) {
+            if(loggedPid === pid) {
+                process.kill(pid, 'SIGHUP');
+                return;
+            }
         }
     }
-    if(pid == null) {
-        await ensureTmpDirs(nginxConfigDir);
-        printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir,"cluster_nginx.conf")}`);
-        await spawn(`${nginxBinPath}`,["-c",Path.join(nginxConfigDir,"cluster_nginx.conf")],{detached:true});
-    }
-    else {
-        process.kill(pid, 'SIGHUP');
-    }
+    await ensureTmpDirs(nginxConfigDir);
+    printInfo(`${nginxBinPath} -c ${Path.join(nginxConfigDir,"cluster_nginx.conf")}`);
+    await spawn(`${nginxBinPath}`,["-c",Path.join(nginxConfigDir,"cluster_nginx.conf")],{detached:true});
 }
 
 export async function syncNginxWithJobList(nginxBinPath:string, nginxConfigDir:string, jobList:Job[]) {

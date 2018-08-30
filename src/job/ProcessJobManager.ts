@@ -103,12 +103,10 @@ export async function startJob(webapiName:string):Promise<Job> {
     // busy wait for the webapi to start
     let job:Job|null;
     await delay(2000);
-    for(let i=0; !(job = await findOneJob({webapiName:webapiName,isRunning:true})); i++) {
-        if(i>=30) {
-            throw new Error("EXEC_TIMEOUT");
-        }
-        printInfo(`waiting for the job ${chalk.cyan(webapiName)} to be running`);
-        await delay(2000);
+    job = await findOneJob({webapiName:webapiName,isRunning:true});
+    if(!job) {
+        const errLogContent = await fs.readFile(`${entryScriptDir}/${WEBAPI_STDERR_LOG}`,'utf8');
+        throw new Error("failed to start job");
     }
     return job;
 }
