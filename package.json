@@ -1,6 +1,6 @@
 {
   "name": "hltc-webapi-master",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Command-line interface to manage WebAPIs",
   "scripts": {
     "build": "tsc"

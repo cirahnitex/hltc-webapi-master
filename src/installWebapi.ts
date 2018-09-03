@@ -114,7 +114,7 @@ async function writeFcgiEntryScript(wd:string, queue:string, platformType:string
 if [ -z "$PLATFORM_TYPE" ]; then
 	PLATFORM_TYPE=\`make -f $CL/dev/Makefile echo-PLATFORM_TYPE\`
 fi
-LD_LIBRARY_PATH=$LD_LIBRATY_PATH:${FCGI_LIB_PATH('$PLATFORM_TYPE', '$CL')}
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FCGI_LIB_PATH('$PLATFORM_TYPE', '$CL')}
 ${SPAWN_FCGI_BIN("$PLATFORM_TYPE",'$CL')} -p $PORT -n $PLATFORM_TYPE/main 
 `;
     await fs.writeFile(`${wd}/${FCGI_ENTRY_SCRIPT}`, scriptContent);

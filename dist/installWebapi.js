@@ -117,7 +117,7 @@ function writeFcgiEntryScript(wd, queue, platformType) {
 if [ -z "$PLATFORM_TYPE" ]; then
 	PLATFORM_TYPE=\`make -f $CL/dev/Makefile echo-PLATFORM_TYPE\`
 fi
-LD_LIBRARY_PATH=$LD_LIBRATY_PATH:${paths_1.FCGI_LIB_PATH('$PLATFORM_TYPE', '$CL')}
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${paths_1.FCGI_LIB_PATH('$PLATFORM_TYPE', '$CL')}
 ${paths_1.SPAWN_FCGI_BIN("$PLATFORM_TYPE", '$CL')} -p $PORT -n $PLATFORM_TYPE/main 
 `;
         yield fs.writeFile(`${wd}/${paths_1.FCGI_ENTRY_SCRIPT}`, scriptContent);
