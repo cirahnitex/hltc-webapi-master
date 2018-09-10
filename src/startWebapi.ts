@@ -14,9 +14,10 @@ import {getMany as makeGetVariables} from "./MakeVariables";
 import * as Nginx from "./nginx/Nginx";
 import * as http from "http";
 import * as querystring from "querystring";
+import delay from "./delay";
 
 
-function call_init_api(name:string) {
+export function call_init_api(name:string) {
     return new Promise((resolve, reject)=>{
         // Build the post string from an object
         const post_data = querystring.stringify({
@@ -27,7 +28,7 @@ function call_init_api(name:string) {
         const post_options = {
             host: 'localhost',
             port: '8792',
-            path: `${name}/init`,
+            path: `/${name}/init`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -73,7 +74,7 @@ async function start_webapi(name:string) {
     printInfo("starting NGINX");
     const platformType = (await makeGetVariables(DEV, "PLATFORM_TYPE"))[0];
     await Nginx.syncNginxWithJobList(NGINX_BIN(platformType), NGINX_CONF_HOME, await JobManager.listJobs());
-
+    await delay(5000);
     printInfo("calling init function");
 
     try {

@@ -5,6 +5,7 @@ import {spawn, exec} from "ts-process-promises";
 import * as Path from "path";
 import {NGINX_CONF_HOME, WEBAPI_CLIENT_HTDOCS_DIR} from "../paths";
 import {printInfo} from "../util/consoleStyles";
+import delay from "../delay";
 
 function generateFastCgiPass(aJob:Job[]):string {
     let ret = "";
@@ -89,6 +90,7 @@ export async function startOrRestartNginx(nginxBinPath:string, nginxConfigDir:st
         for(const {pid} of psList) {
             if(loggedPid === pid) {
                 process.kill(pid, 'SIGHUP');
+                await delay(1000);
                 return;
             }
         }
