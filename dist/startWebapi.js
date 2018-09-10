@@ -15,6 +15,38 @@ const SGEJobManager = require("./job/SGEJobManager");
 const ProcessJobManager = require("./job/ProcessJobManager");
 const MakeVariables_1 = require("./MakeVariables");
 const Nginx = require("./nginx/Nginx");
+const http = require("http");
+const querystring = require("querystring");
+function call_init_api(name) {
+    return new Promise((resolve, reject) => {
+        // Build the post string from an object
+        const post_data = querystring.stringify({
+            'format': 'json'
+        });
+        // An object of options to indicate where to post to
+        const post_options = {
+            host: 'localhost',
+            port: '8792',
+            path: `${name}/init`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(post_data)
+            }
+        };
+        const post_req = http.request(post_options, function (res) {
+            res.setEncoding('utf8');
+            let data = '';
+            res.on('data', function (chunk) {
+                data += chunk;
+            });
+            res.on("error", reject);
+            res.on("end", () => resolve(data));
+        });
+        post_req.write(post_data);
+        post_req.end();
+    });
+}
 function start_webapi(name) {
     return __awaiter(this, void 0, void 0, function* () {
         // safety check: don't accept funny stuffs as module name
@@ -35,6 +67,14 @@ function start_webapi(name) {
         consoleStyles_1.printInfo("starting NGINX");
         const platformType = (yield MakeVariables_1.getMany(paths_1.DEV, "PLATFORM_TYPE"))[0];
         yield Nginx.syncNginxWithJobList(paths_1.NGINX_BIN(platformType), paths_1.NGINX_CONF_HOME, yield JobManager.listJobs());
+        consoleStyles_1.printInfo("calling init function");
+        try {
+            const res = yield call_init_api(name);
+            console.log(res);
+        }
+        catch (e) {
+            console.log(e.message);
+        }
         consoleStyles_1.printInfo("done");
         return job;
     });

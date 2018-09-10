@@ -12,7 +12,43 @@ import * as ProcessJobManager from "./job/ProcessJobManager";
 import {getMany as makeGetVariables} from "./MakeVariables";
 
 import * as Nginx from "./nginx/Nginx";
+import * as http from "http";
+import * as querystring from "querystring";
 
+
+function call_init_api(name:string) {
+    return new Promise((resolve, reject)=>{
+        // Build the post string from an object
+        const post_data = querystring.stringify({
+            'format':'json'
+        });
+
+        // An object of options to indicate where to post to
+        const post_options = {
+            host: 'localhost',
+            port: '8792',
+            path: `${name}/init`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(post_data)
+            }
+        };
+
+        const post_req = http.request(post_options, function(res) {
+            res.setEncoding('utf8');
+            let data = '';
+            res.on('data', function (chunk) {
+                data += chunk;
+            });
+            res.on("error", reject);
+            res.on("end", ()=>resolve(data));
+        });
+
+        post_req.write(post_data);
+        post_req.end();
+    });
+}
 
 async function start_webapi(name:string) {
 
@@ -37,6 +73,16 @@ async function start_webapi(name:string) {
     printInfo("starting NGINX");
     const platformType = (await makeGetVariables(DEV, "PLATFORM_TYPE"))[0];
     await Nginx.syncNginxWithJobList(NGINX_BIN(platformType), NGINX_CONF_HOME, await JobManager.listJobs());
+
+    printInfo("calling init function");
+
+    try {
+        const res = await call_init_api(name);
+        console.log(res);
+    }
+    catch(e) {
+        console.log(e.message);
+    }
 
     printInfo("done");
     return job;
