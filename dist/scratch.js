@@ -1,15 +1,36 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const psList = require("ps-list");
-(() => __awaiter(this, void 0, void 0, function* () {
-    console.log(yield psList());
-}))();
+const querystring = require("querystring");
+const http = require("http");
+function call_init_api() {
+    return new Promise((resolve, reject) => {
+        // Build the post string from an object
+        const post_data = querystring.stringify({
+            'format': 'json'
+        });
+        // An object of options to indicate where to post to
+        const post_options = {
+            host: 'localhost',
+            port: '8792',
+            path: `/test/say_hi`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(post_data)
+            }
+        };
+        const post_req = http.request(post_options, function (res) {
+            res.setEncoding('utf8');
+            let data = '';
+            res.on('data', function (chunk) {
+                data += chunk;
+            });
+            res.on("error", reject);
+            res.on("end", () => resolve(data));
+        });
+        post_req.write(post_data);
+        post_req.end();
+    });
+}
+call_init_api().then(r => console.log(r)).catch(e => console.log(e.message));
 //# sourceMappingURL=scratch.js.map

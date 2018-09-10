@@ -17,6 +17,7 @@ const MakeVariables_1 = require("./MakeVariables");
 const Nginx = require("./nginx/Nginx");
 const http = require("http");
 const querystring = require("querystring");
+const delay_1 = require("./delay");
 function call_init_api(name) {
     return new Promise((resolve, reject) => {
         // Build the post string from an object
@@ -27,7 +28,7 @@ function call_init_api(name) {
         const post_options = {
             host: 'localhost',
             port: '8792',
-            path: `${name}/init`,
+            path: `/${name}/init`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -47,6 +48,7 @@ function call_init_api(name) {
         post_req.end();
     });
 }
+exports.call_init_api = call_init_api;
 function start_webapi(name) {
     return __awaiter(this, void 0, void 0, function* () {
         // safety check: don't accept funny stuffs as module name
@@ -67,6 +69,7 @@ function start_webapi(name) {
         consoleStyles_1.printInfo("starting NGINX");
         const platformType = (yield MakeVariables_1.getMany(paths_1.DEV, "PLATFORM_TYPE"))[0];
         yield Nginx.syncNginxWithJobList(paths_1.NGINX_BIN(platformType), paths_1.NGINX_CONF_HOME, yield JobManager.listJobs());
+        yield delay_1.default(5000);
         consoleStyles_1.printInfo("calling init function");
         try {
             const res = yield call_init_api(name);

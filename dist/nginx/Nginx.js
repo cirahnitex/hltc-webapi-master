@@ -15,6 +15,7 @@ const ts_process_promises_1 = require("ts-process-promises");
 const Path = require("path");
 const paths_1 = require("../paths");
 const consoleStyles_1 = require("../util/consoleStyles");
+const delay_1 = require("../delay");
 function generateFastCgiPass(aJob) {
     let ret = "";
     for (let i = 0; i < aJob.length; i++) {
@@ -103,6 +104,7 @@ function startOrRestartNginx(nginxBinPath, nginxConfigDir) {
             for (const { pid } of psList) {
                 if (loggedPid === pid) {
                     process.kill(pid, 'SIGHUP');
+                    yield delay_1.default(1000);
                     return;
                 }
             }
