@@ -165,6 +165,7 @@ export default async function(path:string) {
     // projectName - hpp file name without the .hpp suffix
     let [match, projectDir, hppFileName, projectName] = path.match(/^(.*)\/(([a-zA-Z0-9_-]+)\.h(pp)?)$/) as string[];
 
+    // shorten the project name
     // remove the "webapi" or "api" prefix/suffix project name
     // because a webapi is by itself a webapi, there is no point of keeping such prefix/suffix
     projectName = projectName.replace(/_?webapi_?/,"").replace("_api","");
