@@ -16,25 +16,29 @@ const webapiName = process.argv[2];
 (async()=>{
 
     const {active, stopped} = await listWebapis();
-    let jobId:string|null = null;
+    let jobIds:string[] = [];
     for(const webapi of active) {
         if(webapi.webapiName === webapiName) {
-            jobId = webapi.id;
+            jobIds.push( webapi.id);
         }
     }
-    if(jobId == null) {
+    if(jobIds.length<=0) {
         printError(`Cannot find running WebAPI with name ${webapiName}`);
         process.exit(-1);
         return;
     }
     const queue = await ensureNotOnComputationNode();
     if(queue === 'hltc00') {
-        const command = `qdel ${jobId}`;
-        printInfo("executing " + chalk.cyan(command));
-        await exec(command);
+        for(const jobId of jobIds) {
+            const command = `qdel ${jobId}`;
+            printInfo("executing " + chalk.cyan(command));
+            await exec(command);
+        }
     }
     else {
-        printInfo("killing process tree " + chalk.cyan(jobId));
-        process.kill(-jobId);
+        for(const jobId of jobIds) {
+            printInfo("killing process tree " + chalk.cyan(jobId));
+            process.kill(parseInt(jobId));
+        }
     }
 })();

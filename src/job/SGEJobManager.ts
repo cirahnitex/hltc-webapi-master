@@ -15,11 +15,19 @@ async function killWaitingJobs(aJob:Job[]) {
     }
 }
 
-export async function findOneJob(filter:Partial<Job>):Promise<Job|null> {
+export async function findOneJob(filter:Partial<Job>):Promise<null|Job> {
     const parser = new QStatusParser();
     const {stdout} = await exec(QSTATUS);
     parser.parse(stdout);
     return parser.matchOne(filter);
+}
+
+
+export async function findJobs(filter:Partial<Job>):Promise<Job[]> {
+    const parser = new QStatusParser();
+    const {stdout} = await exec(QSTATUS);
+    parser.parse(stdout);
+    return parser.matchMany(filter);
 }
 
 export async function listJobs():Promise<Job[]> {
@@ -29,7 +37,7 @@ export async function listJobs():Promise<Job[]> {
     return parser.aJob;
 }
 
-export async function startJob(webapiName: string):Promise<Job> {
+export async function startJob(webapiName: string, numInstances: number):Promise<Job[]> {
     const parser = new QStatusParser();
 
     // get the entry script and protocol
@@ -49,19 +57,22 @@ export async function startJob(webapiName: string):Promise<Job> {
 
     const packedName = Job.serializeName(webapiName, port, protocol);
     const qsubCmd = `qsub -o ${WEBAPI_STDOUT_LOG} -e ${WEBAPI_STDERR_LOG} -v PORT=${port} -N ${packedName} -wd ${INSTALLED_WEBAPIS}/${webapiName} ${entryScript}`;
-    printInfo(`performing qsub: ${chalk.cyan(qsubCmd)}`);
-    await exec(qsubCmd);
+    printInfo(`performing qsub: ${chalk.cyan(qsubCmd)} for ${chalk.cyan(numInstances.toString())} times`);
+    for(let i=0; i<numInstances; i++) {
+        await exec(qsubCmd);
+    }
 
     // busy wait for the webapi to start
-    let job:Job|null;
+    let jobs:Job[];
     await delay(2000);
-    for(let i=0; !(job = await findOneJob({webapiName:webapiName,isRunning:true})); i++) {
+    for(let i=0; (jobs = await findJobs({webapiName:webapiName,isRunning:true})).length<numInstances; i++) {
         if(i>=30) {
             await killWaitingJobs(parser.aJob);
             throw new Error("EXEC_TIMEOUT");
         }
-        printInfo(`waiting for the job ${chalk.cyan(webapiName)} to be running`);
+        printInfo(`instances started: ${chalk.cyan(jobs.length.toString())}`);
         await delay(2000);
     }
-    return job;
+    printInfo(`instances started: ${chalk.cyan(jobs.length.toString())}`);
+    return jobs;
 }

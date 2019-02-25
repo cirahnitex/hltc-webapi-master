@@ -16,9 +16,8 @@ import * as http from "http";
 import * as querystring from "querystring";
 import delay from "./delay";
 
-
-export function call_init_api(name:string) {
-    return new Promise((resolve, reject)=>{
+function call_an_init_api(name:string, instanceIndex:number) {
+    return new Promise<string>((resolve, reject)=>{
         // Build the post string from an object
         const post_data = querystring.stringify({
             'format':'json'
@@ -28,7 +27,7 @@ export function call_init_api(name:string) {
         const post_options = {
             host: 'localhost',
             port: '8792',
-            path: `/${name}/init`,
+            path: `/${name}_server_${instanceIndex}/init`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -51,7 +50,15 @@ export function call_init_api(name:string) {
     });
 }
 
-async function start_webapi(name:string) {
+export function call_all_init_apis(name:string, numInstances:number) {
+    const promises:Promise<string>[] = [];
+    for(let i=0; i<numInstances; i++) {
+        promises.push(call_an_init_api(name, i));
+    }
+    return Promise.all(promises);
+}
+
+async function start_webapi(name:string, numInstances:number=1) {
 
     // safety check: don't accept funny stuffs as module name
     if(!name || !name.match(/^[a-zA-Z0-9_.]+$/)) throw new Error(`Module name malformed. Got "${name}".`);
@@ -64,12 +71,13 @@ async function start_webapi(name:string) {
     }
 
     // avoid running multiple instances of the same module
-    // this behavior may change if we want to run multiple instances and do load balancing in future
+    // even when running additional instances of the same WebAPI, we don't want old versions to keep running
+    // so please stop all existing WebAPIs before starting
     if(await JobManager.findOneJob({webapiName:name,isRunning:true})) {
         throw new Error("ALREADY_RUNNING");
     }
 
-    const job = await JobManager.startJob(name);
+    const job = await JobManager.startJob(name, numInstances);
 
     printInfo("starting NGINX");
     const platformType = (await makeGetVariables(DEV, "PLATFORM_TYPE"))[0];
@@ -78,8 +86,7 @@ async function start_webapi(name:string) {
     printInfo("calling init function");
 
     try {
-        const res = await call_init_api(name);
-        console.log(res);
+        await call_all_init_apis(name, numInstances);
     }
     catch(e) {
         console.log(e.message);

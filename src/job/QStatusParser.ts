@@ -49,4 +49,24 @@ export default class QStatusParser {
         return null;
     }
 
+    matchMany(obj:Partial<Job>):Job[] {
+        const ret:Job[] = [];
+        for (let i = 0; i < this.aJob.length; i++) {
+            const job = this.aJob[i];
+            let matched = true;
+            for (let key in obj) {
+                if (!obj.hasOwnProperty(key)) continue;
+                if (job[key] !== obj[key]) {
+                    matched = false;
+                    break;
+                }
+            }
+
+            if (matched) {
+                ret.push(job);
+            }
+        }
+        return ret;
+    }
+
 }

@@ -7,11 +7,14 @@ import listWebapis from "../listWebapis";
 
 program
     .description("start a WebAPI by name")
-    .arguments('<webapi-name>')
+    .usage('[options] <name>')
+    .option('-n, --num-instances [n]', 'number of instances to spawn, default to 1', parseInt)
     .parse(process.argv);
 
-if(process.argv.length !== 3) program.help();
-const webapiName = process.argv[2];
+
+if(program.args.length !== 1) program.help();
+const webapiName = program.args[0];
+const numInstances = (program.numInstances || 1) as number;
 
 (async()=>{
     const {active, stopped} = await listWebapis();
@@ -26,7 +29,7 @@ const webapiName = process.argv[2];
         process.exit(-1);
     }
     try {
-        await startWebapi(webapiName);
+        await startWebapi(webapiName, numInstances);
     }
     catch(e) {
         printError(e.message);

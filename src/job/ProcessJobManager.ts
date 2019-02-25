@@ -77,7 +77,7 @@ async function findCloestPlatformType(entryScriptDir:string, realPlatformType:st
     return bestPlatform;
 }
 
-export async function startJob(webapiName:string):Promise<Job> {
+export async function startJob(webapiName:string, numInstances:number):Promise<Job[]> {
 
     // get the entry script and protocol
     const entryScriptMeta = await getEntryScript(webapiName);
@@ -113,5 +113,5 @@ export async function startJob(webapiName:string):Promise<Job> {
             throw new Error("job error: " + errLogContent);
         }
     }
-    return job;
+    return job?[job]:[];
 }

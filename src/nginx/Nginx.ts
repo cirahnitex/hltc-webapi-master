@@ -7,30 +7,102 @@ import {NGINX_CONF_HOME, WEBAPI_CLIENT_HTDOCS_DIR} from "../paths";
 import {printInfo} from "../util/consoleStyles";
 import delay from "../delay";
 
-function generateFastCgiPass(aJob:Job[]):string {
-    let ret = "";
-    for(let i=0; i<aJob.length; i++) {
-        const job = aJob[i];
+
+function groupRunningJobsByName(aJob:Job[]):Map<string, Job[]> {
+    const ret:Map<string, Job[]> = new Map();
+
+    for(const job of aJob) {
         if(!job.isRunning) continue;
-        if(job.protocol !== Job.Protocols.FCGI) continue;
-        ret += "location /"+job.webapiName+"/ {\n";
-        ret += "    include fastcgi.conf;\n";
-        ret += "    fastcgi_pass  "+job.host+":"+job.port+";\n";
-        ret += "}\n";
+        const existings = ret.get(job.webapiName);
+        if(existings != null) {
+            existings.push(job);
+        }
+        else {
+            ret.set(job.webapiName, [job]);
+        }
     }
+
     return ret;
 }
 
-function generateProxyPass(aJob:Job[]):string {
+function generateFastCgiPass(jobGroups:Map<string, Job[]>):string {
     let ret = "";
-    for(let i=0; i<aJob.length; i++) {
-        const job = aJob[i];
-        if(!job.isRunning) continue;
-        if(job.protocol !== Job.Protocols.HTTP) continue;
-        ret += "location /"+job.webapiName+"/ {\n";
-        ret += "    proxy_pass  http://"+job.host+":"+job.port+"/;\n";
-        ret += "}\n";
+
+    for(const [name, jobGroup] of jobGroups) {
+        if(jobGroup.length<=0 || jobGroup[0].protocol !== Job.Protocols.FCGI) continue;
+
+        // by default, redirect WebAPI calls to load balancer
+        ret +=
+`location /${name}/ {
+    include fastcgi.conf;
+    fastcgi_pass ${name}_load_balancer;
+}
+`;
+
+        for(let i=0; i<jobGroup.length; i++) {
+            const job = jobGroup[i];
+
+            // still allow calls to a specific server
+            ret +=
+`location /${name}_server_${i}/ {
+    include fastcgi.conf;
+    fastcgi_pass ${job.host}:${job.port};
+}
+`
+        }
     }
+
+    return ret;
+}
+
+function generateLoadBalancer(jobGroups:Map<string, Job[]>):string {
+    let ret = "";
+
+    for(const [name, jobGroup] of jobGroups) {
+
+        ret += `upstream ${name}_load_balancer {
+    least_conn;
+`;
+
+        for(let i=0; i<jobGroup.length; i++) {
+            const job = jobGroup[i];
+
+            // still allow calls to a specific server
+            ret += `    server ${job.host}:${job.port};\n`;
+        }
+
+        ret += `}\n`;
+    }
+
+    return ret;
+}
+
+
+function generateProxyPass(jobGroups:Map<string, Job[]>):string {
+    let ret = "";
+
+    for(const [name, jobGroup] of jobGroups) {
+        if(jobGroup.length<=0 || jobGroup[0].protocol !== Job.Protocols.HTTP) continue;
+
+        // by default, redirect WebAPI calls to load balancer
+        ret +=
+`location /${name}/ {
+    proxy_pass http://${name}_load_balancer/;
+}
+`;
+
+        for(let i=0; i<jobGroup.length; i++) {
+            const job = jobGroup[i];
+
+            // still allow calls to a specific server
+            ret +=
+`location /${name}_server_${i}/ {
+    proxy_pass http://${job.host}:${job.port}/;
+}
+`
+        }
+    }
+
     return ret;
 }
 
@@ -52,8 +124,12 @@ uwsgi_temp_path                 ${nginxConfigDir}/tmp/uwsgi_temp;
 }
 
 export async function writeProxyConfigFromJobs(nginxConfigDir:string, jobs:Job[]) {
-    await Promise.all([fs.outputFile(`${nginxConfigDir}/GENERATED_fastcgi_pass.conf`,generateFastCgiPass(jobs)),
-        fs.outputFile(`${nginxConfigDir}/GENERATED_proxy_pass.conf`,generateProxyPass(jobs))]);
+    const jobGroups = groupRunningJobsByName(jobs);
+    await Promise.all([
+        fs.outputFile(`${nginxConfigDir}/GENERATED_load_balancer.conf`,generateLoadBalancer(jobGroups)),
+        fs.outputFile(`${nginxConfigDir}/GENERATED_fastcgi_pass.conf`,generateFastCgiPass(jobGroups)),
+        fs.outputFile(`${nginxConfigDir}/GENERATED_proxy_pass.conf`,generateProxyPass(jobGroups))
+    ]);
 }
 
 async function writeLogConfig(nginxConfigDir:string) {
