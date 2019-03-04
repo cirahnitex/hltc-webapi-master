@@ -61,7 +61,7 @@ function generateLoadBalancer(jobGroups:Map<string, Job[]>):string {
     for(const [name, jobGroup] of jobGroups) {
 
         ret += `upstream ${name}_load_balancer {
-    least_conn;
+    ip_hash;
 `;
 
         for(let i=0; i<jobGroup.length; i++) {
