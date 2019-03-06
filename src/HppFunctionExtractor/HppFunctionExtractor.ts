@@ -85,7 +85,7 @@ export default class HppFunctionExtractor {
         return ret;
     }
     static parseParamStr(paramStr:string):null|FnParam {
-        const match = paramStr.match(/([a-zA-Z0-9_:]+)[\s&]+([a-zA-Z0-9_]+)\s*(=([^=]+))?\s*$/);
+        const match = paramStr.match(/([a-zA-Z0-9_:><]+)[\s&]+([a-zA-Z0-9_]+)\s*(=([^=]+))?\s*$/);
         if(!match) return null;
         const ret = new FnParam();
         const type = FnParam.parseType(match[1]);
