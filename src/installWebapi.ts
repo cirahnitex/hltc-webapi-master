@@ -195,7 +195,7 @@ export default async function(path:string) {
 
     printInfo(`compiling`);
     // build fastcgi_bridge project
-    await exec("make clean",{cwd:BRIDGE_HOME});
+    await exec("make cleanest",{cwd:BRIDGE_HOME});
     const {stdout, stderr} = await exec("make",{cwd:BRIDGE_HOME});
 
     // move bin to "installed_webapis"
