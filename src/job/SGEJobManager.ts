@@ -50,15 +50,14 @@ export async function startJob(webapiName: string, numInstances: number):Promise
 
     printInfo("entry script: "+chalk.cyan(entryScript));
 
-    const port = generatePortNumber();
-
     printInfo("clearing existing log");
     await clearLog(webapiName);
 
-    const packedName = Job.serializeName(webapiName, port, protocol);
-    const qsubCmd = `qsub -o ${WEBAPI_STDOUT_LOG} -e ${WEBAPI_STDERR_LOG} -v PORT=${port} -N ${packedName} -wd ${INSTALLED_WEBAPIS}/${webapiName} ${entryScript}`;
-    printInfo(`performing qsub: ${chalk.cyan(qsubCmd)} for ${chalk.cyan(numInstances.toString())} times`);
     for(let i=0; i<numInstances; i++) {
+        const port = generatePortNumber();
+        const packedName = Job.serializeName(webapiName, port, protocol);
+        const qsubCmd = `qsub -o ${WEBAPI_STDOUT_LOG} -e ${WEBAPI_STDERR_LOG} -v PORT=${port} -N ${packedName} -wd ${INSTALLED_WEBAPIS}/${webapiName} ${entryScript}`;
+        printInfo(`performing qsub: ${chalk.cyan(qsubCmd)}`);
         await exec(qsubCmd);
     }
 
