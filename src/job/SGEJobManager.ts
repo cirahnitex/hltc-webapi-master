@@ -56,7 +56,7 @@ export async function startJob(webapiName: string, numInstances: number):Promise
     for(let i=0; i<numInstances; i++) {
         const port = generatePortNumber();
         const packedName = Job.serializeName(webapiName, port, protocol);
-        const qsubCmd = `qsub -o ${WEBAPI_STDOUT_LOG} -e ${WEBAPI_STDERR_LOG} -v PORT=${port} -N ${packedName} -wd ${INSTALLED_WEBAPIS}/${webapiName} ${entryScript}`;
+        const qsubCmd = `qsub -o ${packedName}_${WEBAPI_STDOUT_LOG} -e ${WEBAPI_STDERR_LOG} -v PORT=${port} -N ${packedName} -wd ${INSTALLED_WEBAPIS}/${webapiName} ${entryScript}`;
         printInfo(`performing qsub: ${chalk.cyan(qsubCmd)}`);
         await exec(qsubCmd);
     }

@@ -2,6 +2,7 @@ import {FCGI_ENTRY_SCRIPT, HTTP_ENTRY_SCRIPT, INSTALLED_WEBAPIS, WEBAPI_STDERR_L
 import * as fs from "fs-extra";
 import {printInfo} from "../util/consoleStyles";
 import chalk from "chalk";
+import * as Path from 'path';
 
 export default class Job {
     id: string = "";
@@ -53,11 +54,17 @@ export function generatePortNumber():number {
     return Math.floor(9000 + Math.random()*(65535-9000));
 }
 
+/**
+ * delete all log files for a specific WebAPI
+ * log files are those files whose filename ends with ${WEBAPI_STDOUT_LOG} or ${WEBAPI_STDERR_LOG}
+ * @param webapiName
+ */
 export async function clearLog(webapiName:string):Promise<void> {
-    console.log(`unlink ${chalk.cyan(`${INSTALLED_WEBAPIS}/${webapiName}/${WEBAPI_STDOUT_LOG}`)}`);
-    console.log(`unlink ${chalk.cyan(`${INSTALLED_WEBAPIS}/${webapiName}/${WEBAPI_STDERR_LOG}`)}`);
-    await [
-        fs.unlink(`${INSTALLED_WEBAPIS}/${webapiName}/${WEBAPI_STDOUT_LOG}`).catch(()=>{}),
-        fs.unlink(`${INSTALLED_WEBAPIS}/${webapiName}/${WEBAPI_STDERR_LOG}`).catch(()=>{}),
-    ];
+    const dir = Path.join(INSTALLED_WEBAPIS, webapiName);
+    const filenamesToDelete = (await fs.readdir(dir)).filter(x=>x.endsWith(WEBAPI_STDOUT_LOG) || x.endsWith(WEBAPI_STDERR_LOG));
+    const log_and_delete = async (path)=>{
+        console.log(`unlink ${path}`);
+        fs.unlink(path).catch(()=>{});
+    };
+    await Promise.all(filenamesToDelete.map(filename=>log_and_delete(Path.join(dir, filename))));
 }
