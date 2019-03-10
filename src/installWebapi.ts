@@ -100,6 +100,11 @@ async function generateMakefile(projectPath:string) {
     const [selfLibrary, additionalIncludes, additionalLdflags, additionalCxxflags, additionalLibraries ] =
         await makeGetVariables(projectPath, "LIBRARY", "ADDITIONAL_INCLUDES","ADDITIONAL_LDFLAGS","ADDITIONAL_CXXFLAGS","ADDITIONAL_LIBRARIES");
 
+    if(selfLibrary==null || selfLibrary.length===0) {
+        printError(`variable $LIBRARY is not defined in the project ${chalk.cyan(projectPath)}. Did you forget to define $LIBRARY_NAME in your project makefile?`);
+        process.exit(-1);
+    }
+
     return `ADDITIONAL_INCLUDES += -I${projectPath} ${additionalIncludes}
 ADDITIONAL_LDFLAGS += ${additionalLdflags}
 ADDITIONAL_CXXFLAGS += ${additionalCxxflags}
